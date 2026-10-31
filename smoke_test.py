@@ -108,7 +108,13 @@ def jalankan_langkah(no: int, nama: str, fungsi, ctx: dict, L: Logger) -> dict:
 def _device(ctx: dict):
     import torch
     if "device" not in ctx:
-        ctx["device"] = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        # Urutan sama dengan pick_device di train.py: CUDA -> MPS (Apple Silicon) -> CPU
+        if torch.cuda.is_available():
+            ctx["device"] = torch.device("cuda")
+        elif torch.backends.mps.is_available():
+            ctx["device"] = torch.device("mps")
+        else:
+            ctx["device"] = torch.device("cpu")
     return ctx["device"]
 
 
@@ -125,6 +131,11 @@ def _log_vram(device, L: Logger, label: str) -> None:
         torch.cuda.synchronize()
         puncak = torch.cuda.max_memory_allocated() / 1024**2
         L.log(f"  VRAM puncak ({label}): {puncak:.0f} MiB")
+    elif device.type == "mps":
+        # MPS tidak menyediakan statistik puncak, jadi yang dicatat adalah memori saat ini
+        torch.mps.synchronize()
+        sekarang = torch.mps.current_allocated_memory() / 1024**2
+        L.log(f"  Memori MPS terpakai ({label}, bukan puncak): {sekarang:.0f} MiB")
 
 
 def _bersihkan_vram() -> None:
@@ -133,6 +144,8 @@ def _bersihkan_vram() -> None:
         import torch
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
+        elif torch.backends.mps.is_available():
+            torch.mps.empty_cache()  # bebaskan memori MPS sebelum train.py dijalankan
     except Exception:
         pass
 
@@ -230,8 +243,10 @@ def langkah_lingkungan(ctx: dict, L: Logger):
     if device.type == "cuda":
         p = torch.cuda.get_device_properties(0)
         L.log(f"  GPU         : {p.name} | VRAM total {p.total_memory / 1024**3:.2f} GB")
+    elif device.type == "mps":
+        L.log(f"  GPU         : Apple Silicon (MPS) | {platform.machine()}")
     else:
-        peringatan(ctx, L, "CUDA tidak tersedia, semua langkah berjalan di CPU (lambat)")
+        peringatan(ctx, L, "CUDA dan MPS tidak tersedia, semua langkah berjalan di CPU (lambat)")
     L.log(f"  Device      : {device}")
 
 
