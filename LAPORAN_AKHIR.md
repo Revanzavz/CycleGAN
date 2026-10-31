@@ -1,7 +1,7 @@
 # Laporan Akhir: CycleGAN untuk Translasi Gaya Monet ↔ Foto
 
 **Kelompok:** Kelompok 4
-**Mata kuliah:** [ISI NAMA MATA KULIAH]
+**Mata kuliah:** GENERATIVE AI BS1IF-47-GAB01
 **Anggota:** Vanza, Raihan, Zara, Dafa
 **Repositori:** https://github.com/Revanzavz/CycleGAN
 
