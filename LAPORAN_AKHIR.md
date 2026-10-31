@@ -166,7 +166,7 @@ Nilai default di `CycleGANLoss` adalah λ_cycle = 10 dan λ_identity = 5. Bobot 
 | Seed | 42 (default `train.py`), sama untuk kelima run |
 | Perangkat | NVIDIA GeForce RTX 3050 Laptop GPU 4 GB, Windows 11, PyTorch 2.11.0+cu128 |
 
-Karena keterbatasan waktu sebelum tenggat, setiap run dilatih 10 epoch × 400 iterasi, bukan 40 epoch penuh. Estimasi 40 epoch penuh (1.072 iterasi per epoch untuk batch 1) adalah sekitar 1.8–2.4 jam per run, atau sekitar 9–11 jam untuk kelima run, di RTX 3050. Kelima run memakai pengaturan yang sama sehingga tetap dapat dibandingkan satu sama lain.
+Setiap run dilatih 10 epoch × 400 iterasi per epoch. Sebagai perbandingan, 40 epoch penuh (1.072 iterasi per epoch untuk batch 1) diperkirakan membutuhkan sekitar 1.8–2.4 jam per run, atau sekitar 9–11 jam untuk kelima run, di RTX 3050. Kelima run memakai pengaturan yang sama sehingga tetap dapat dibandingkan satu sama lain.
 
 **Penggunaan memori (dari smoke test, batch 2):**
 - puncak VRAM forward + backward fp32: 1241 MiB;
@@ -357,7 +357,7 @@ Contoh gambar run lain:
 
 ### 8.2 Keterbatasan
 
-1. **Training dipersingkat** menjadi 10 epoch × 400 iterasi (4.000 update per run) karena keterbatasan waktu. Model belum konvergen penuh, dan perbedaan antar-konfigurasi bisa berubah dengan training yang lebih panjang.
+1. **Training dipersingkat** menjadi 10 epoch × 400 iterasi (4.000 update per run). Model belum konvergen penuh, dan perbedaan antar-konfigurasi bisa berubah dengan training yang lebih panjang.
 2. **Satu seed per konfigurasi.** Selisih kecil antar-run, seperti pada perbandingan λ_cycle, bisa jadi hanya noise. Tidak ada estimasi variansi atau uji signifikansi.
 3. **Efek batch size tercampur dengan jumlah data.** Dengan `--max_iters 400`, run batch 2 melakukan jumlah update yang sama dengan batch 1 tetapi melihat 2 kali lebih banyak gambar per epoch.
 4. **Metrik kuantitatif terbatas.** `rec_err` hanya mengukur rekonstruksi, bukan kualitas atau realisme gaya. Laporan ini tidak memakai metrik seperti FID atau KID, dan pengamatan visual baru dilakukan rinci untuk baseline.

@@ -243,7 +243,7 @@ Lima run eksperimen dengan metode **OFAT** (One Factor at a Time), menggunakan `
 | `batch_size` | 1 vs 2 | bs2 terbaik di semua metrik rekonstruksi (rec_err_mean 0,1908, cycle mentah 0,433). Namun karena `--max_iters 400`, jumlah update sama sedangkan bs2 melihat 2× lebih banyak gambar per epoch, sehingga efek ukuran batch tercampur dengan jumlah data. Waktu 1,23 vs 1,01 menit/epoch. |
 
 - **Konfigurasi baseline:** `cyc10_id5_bs1` (lambda_cycle 10, lambda_identity 5, batch 1), Adam lr 2e-4 beta1 0,5.
-- **Durasi training aktual:** 10 epoch × 400 iterasi per epoch untuk kelima run (`python run_experiments.py --epochs 10 --max_iters 400`), sekitar 1 menit per epoch di RTX 3050. Rencana awal 40 epoch penuh (perkiraan ±11 jam) dipersingkat karena tenggat waktu.
+- **Durasi training aktual:** 10 epoch × 400 iterasi per epoch untuk kelima run (`python run_experiments.py --epochs 10 --max_iters 400`), sekitar 1 menit per epoch di RTX 3050. Rencana awal 40 epoch penuh (perkiraan ±9–11 jam untuk kelima run) dipersingkat menjadi konfigurasi ini.
 - **Metrik evaluasi:** G loss, D loss, cycle dan identity loss mentah (tanpa lambda), skor D real/fake, dan cycle reconstruction error per gambar pada data test, dibaca bersama grid `test_samples.png`.
 - **Prompt terkait optimasi:** Prompt 2 Anggota 3 + lanjutan (mode OFAT 5 run, `--only`, log per run `train_stdout.log`, evaluasi per gambar, `test_samples.png`). Uji alur di Mac (2 epoch × 20 iterasi) berhasil untuk kelima run.
 - **Kesimpulan dan konfigurasi akhir:**
