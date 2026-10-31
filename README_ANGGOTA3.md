@@ -121,24 +121,61 @@ Catatan untuk analisis batch size: dengan jumlah epoch sama, batch 2 berarti jum
 ```
 LOG INTERAKSI LLM - KELOMPOK [Nama Kelompok]
 • Tanggal Sesi: 31/10/2026
+• Anggota: Zara (Anggota 3 - Training Loop & Hyperparameter Tuning Engineer)
 • Target Modul: losses.py, utils.py, train.py, evaluate.py, run_experiments.py, plot_results.py
-• Tautan Sesi Chat: [share link sesi ini]
+• Tautan Sesi Chat: https://claude.ai/share/96a9604d-bed3-40eb-aaeb-ed1bde804b89
+• Commit Terkait: fcfe36b - https://github.com/Revanzavz/CycleGAN/commit/fcfe36b
+• Catatan: Riwayat chat asli terhapus. Sesi di atas adalah rekonstruksi dengan
+  prompt yang sama, termasuk debugging yang diulang di Mac. Kode final yang
+  dipakai tim adalah commit fcfe36b.
+
+KRONOLOGI PROMPT & RESPONS:
 
 1. TAHAP INISIASI
-   - Prompt Kelompok: (Prompt 1 dan Prompt 2 Anggota 3 dari dokumen prompting)
-   - Alasan Khusus: Training dipecah menjadi tiga tahap (loss, utils, training loop)
-     agar tiap modul bisa diuji terpisah sebelum digabung. Antarmuka models.py dan
-     dataset.py disebutkan eksplisit supaya kode tidak bentrok dengan anggota lain.
-     Mixed precision diminta karena VRAM RTX 3050 terbatas.
-   - Output Model: losses.py (LSGAN + L1 cycle + L1 identity berbobot), utils.py
-     (ImageBuffer 50, checkpoint, grid 6 kolom, CSV logger), train.py (update G lalu D,
-     Adam 2e-4 beta1 0.5, linear decay, AMP, checkpoint tiap 5 epoch), serta skrip
-     eksperimen, evaluasi, dan grafik.
+   - Prompt Kelompok: System prompt kelompok + peran Anggota 3 + antarmuka
+     models.py dan dataset.py, lalu diminta mengerjakan 3 tahap berurutan:
+     losses.py, utils.py, train.py.
+   - Alasan Khusus: Training dipecah tiga tahap supaya tiap modul bisa diuji
+     terpisah. Antarmuka modul anggota lain disebut eksplisit agar kode tidak
+     bentrok. Mixed precision diminta karena VRAM RTX 3050 terbatas.
+   - Output Model: losses.py (LSGAN + cycle L1 + identity L1, nilai mentah dan
+     berbobot), utils.py (ImageBuffer 50, checkpoint, grid 6 kolom, logger CSV,
+     jadwal lr linear decay), train.py (update G lalu D, Adam 2e-4 beta1 0.5, AMP).
+   - Penyesuaian: format batch dataset.py ternyata dict {"A", "B"}, output D
+     berukuran (B, 1, 14, 14), dan bobot sudah diinisialisasi di models.py.
+     Kode disesuaikan dengan helper unpack_batch.
 
 2. TAHAP PENANGANAN EROR / DEBUGGING
-   - [isi saat training sungguhan dijalankan dan muncul error]
+   a. Python tidak ditemukan dan training berjalan di CPU (Mac)
+      - Pesan Eror: zsh: command not found: python
+        UserWarning: 'pin_memory' argument is set as true but not supported
+        on MPS now, device pinned memory won't be used.
+        Device: cpu | AMP: False | identity: True | 1072 iterasi/epoch
+        (training tidak menampilkan output, dihentikan dengan Ctrl+C -> KeyboardInterrupt)
+      - Prompt Perbaikan: menempelkan output terminal, lalu meminta penjelasan
+        dan fungsi pick_device (CUDA -> MPS -> CPU), --max_iters, dan cetak progres.
+      - Analisis & Solusi: macOS hanya menyediakan python3, jadi dipakai virtual
+        environment. Peringatan pin_memory tidak berbahaya (fitur khusus CUDA).
+        Setelah perbaikan, device menjadi mps dan uji 20 iterasi selesai ~5-7 detik.
+   b. Learning rate menjadi 0 saat resume
+      - Pesan Eror: [003/3] lr=0.00e+00 G=14.682 D=1.649 ...
+        (resume dari epoch 2 dengan --epochs dinaikkan menjadi 3)
+      - Prompt Perbaikan: menempelkan output dan dugaan bahwa jadwal LinearDecay
+        ikut termuat dari checkpoint dengan total_epochs lama.
+      - Analisis & Solusi: state scheduler di checkpoint menimpa jadwal baru.
+        Jadwal kini dihitung ulang dari --epochs saat resume, ditambah
+        checkpoint_latest tiap epoch dan seed per epoch.
+        Hasil uji ulang: [003/3] lr=1.00e-04, G loss turun 12.381 -> 10.128.
+      - Pelajaran: selalu uji resume dengan jumlah epoch yang diubah, karena
+        bug ini tidak memunculkan error dan hanya terlihat dari nilai lr.
 
 3. TAHAP OPTIMASI
-   - Eksperimen: lambda_cycle 5/10/15, identity 0 vs 5, batch 1 vs 2 (5 run).
-   - [isi tabel summary_table.md dan analisis setelah eksperimen selesai]
+   - Desain: one-factor-at-a-time terhadap baseline cyc10_id5_bs1 (5 run x 40 epoch):
+     lambda_cycle 5/10/15, identity 0 vs 5, batch size 1 vs 2.
+   - Skrip: run_experiments.py (aman dijalankan ulang, --only, log per run),
+     evaluasi cycle reconstruction error per gambar,
+     plot_results.py (grafik loss, skor D, tabel ringkas).
+   - Uji alur di Mac (2 epoch x 20 iterasi): kelima run selesai, grafik dan
+     tabel terbentuk.
+   - [isi tabel summary_table.md dan analisis setelah run 40 epoch di RTX 3050 selesai]
 ```
